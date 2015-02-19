@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+{% load bootstrap3 %}
+
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+{% load i18n %}
+{% load l10n %}
+</head>
+<body>
+
+<div class="container">
+    <h1>Richiesta Accredito</h1>
+        <p class="alert" role="alert">
+            {% if req.id %}Richiesta Numero: <a class="text-primary">{{req.id}}</a>{% endif %}
+            Status: <strong class="text-primary">Success</strong>
+        </p>
+    
+{% bootstrap_messages %}
+
+{% block content %}
+    <form role="form" action="/r/edit" method="post" class="form-horizontal"> 
+        {% csrf_token %}
+        <div class="form-group contact">
+            <div class="form-inline">
+                <label class="control-label col-sm-2" for="">Destinatario:</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" placeholder="Ufficio o responsabile" name="name" value="{{ req.name_1|default:"" }}" {{ req|yesno:"disabled," }}>
+                    <label class="control-label sr-only" for="">Email:</label>
+                    <input type="email" class="form-control" placeholder="esempio@ufficiostampa.it" name="email" value="{{ req.mail_1|default:"" }}" {{ req|yesno:"disabled," }}>
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="control-label col-sm-2" for="">Evento:</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" placeholder="Concerto di Piero Scamarcio" name="event" value="{{ req.event|default:"" }}" {{ req|yesno:"disabled," }}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="control-label col-sm-2" for="">Dove:</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" placeholder="Cage Theatre" name="where" value="{{ req.where|default:"" }}" {{ req|yesno:"disabled," }}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="control-label col-sm-2" for="">Quando:</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" placeholder="25 Dicembre 2015" name="when" value="{{ req.when|date:"l j F Y"|default:"" }}" {{ req|yesno:"disabled," }}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="control-label col-sm-2" for="">Richiesto da:</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" placeholder="Speaker" name="user" value="{{ req.requested_by|default:user }}" disabled>
+            </div>
+        </div>
+        <div class="form-group">
+            {% buttons submit='OK' reset="Cancel" %}{% endbuttons %}
+        </div>
+    </form>
+{% endblock %}
+</div>
+</body>
+</html>
