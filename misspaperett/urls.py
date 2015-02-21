@@ -8,4 +8,5 @@ urlpatterns = patterns('',
 
     url(r'^admin/', include(admin.site.urls)),
     url(r'^r/', include('accreditations.urls')),
+    url(r'^djangojs/', include('djangojs.urls')),
 )

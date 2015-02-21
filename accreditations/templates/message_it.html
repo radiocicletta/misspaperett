@@ -1,0 +1,22 @@
+<div style="font-size:10pt;line-height:15.3333320617676px;font-family:Arial,sans-serif">
+<p>Salve,</p>
+
+<p>
+in qualità di Ufficio Stampa di {{imap.organization}},
+{{imap.org_description}}, con la
+presente sono a richiedere numero {{req.how}} accrediti
+per l'evento <b>{{ req.event }}</b> presso
+<b>{{ req.where }}</b>, in data {{ req.when|date:"j F" }} p.v.
+</p>
+
+<p>Rimango a disposizione per qualsiasi evenienza.</p>
+
+<p>Un cordiale saluto,</p>
+
+{{imap.organization}}.
+{{imap.org_url}}
+<br>
+--
+<br>
+{{imap.signature|safe}}
+</div>

@@ -36,10 +36,9 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django_mailbox',
     'accreditations',
+    'djangojs',
     'bootstrap3',
-    'onetomany',
 )
 
 MIDDLEWARE_CLASSES = (

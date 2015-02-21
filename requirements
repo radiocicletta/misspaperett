@@ -1,4 +1,4 @@
 django
-django-mailbox
+flanker
 django-bootstrap3
--e git+http://github.com/adsworth/django-onetomany#egg=django-onetomany
+django.js

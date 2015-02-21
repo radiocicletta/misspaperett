@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title></title>
-{% load bootstrap3 %}
+{% load bootstrap3 js %}
+{% jquery_js %}
 
 {% bootstrap_css %}
 {% bootstrap_javascript %}
@@ -14,10 +15,19 @@
 
 <div class="container">
     <h1>Richiesta Accredito</h1>
-        <p class="alert" role="alert">
-            {% if req.id %}Richiesta Numero: <a class="text-primary">{{req.id}}</a>{% endif %}
-            Status: <strong class="text-primary">Success</strong>
-        </p>
+    <p class="alert" role="alert">
+        {% if req.id %}Richiesta Numero: <a class="text-primary" href="/r/view/{{req.id}}">{{req.id}}</a>{% endif %}
+        Status: <strong class="text-primary">{{req.status}}</strong>
+    </p>
+    <div class="btn-group">
+      <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+        <span class="glyphicon glyphicon-pencil"></span> Rispondi <span class="caret"></span>
+      </button>
+      <ul class="dropdown-menu" role="menu">
+        <li><a href="#"><span class="glyphicon glyphicon-ok"></span> Chiudi richiesta</a></li>
+        <li><a href="#"><span class="glyphicon glyphicon-user"></span> Fornisci nominativi</a></li>
+      </ul>
+    </div>
     
 {% bootstrap_messages %}
 
@@ -53,16 +63,77 @@
             </div>
         </div>
         <div class="form-group">
-            <label class="control-label col-sm-2" for="">Richiesto da:</label>
+            <label class="control-label col-sm-2" for="">Numero Accrediti:</label>
             <div class="col-sm-10">
-                <input type="text" class="form-control" placeholder="Speaker" name="user" value="{{ req.requested_by|default:user }}" disabled>
+                <select class="form-control" id="" name="how" {{ req|yesno:"disabled," }}>
+                    {% for i in "1234" %}
+                    <option value="{% cycle 1 2 3 4 as val %}" {% if val == req.how %}selected="selected"{%endif%}>{{val}}</option>
+                    {% endfor %}
+                </select>
             </div>
         </div>
         <div class="form-group">
+            <label class="control-label col-sm-2" for="">Richiesto da:</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" placeholder="Speaker" name="user" value="{{ req.requested_by.first_name|default:user.first_name }} {{ req.requested_by.last_name|default:user.last_name }}" disabled>
+            </div>
+        </div>
+        {% if not req %}
+        <div class="form-group">
             {% buttons submit='OK' reset="Cancel" %}{% endbuttons %}
         </div>
+        {% endif %}
     </form>
 {% endblock %}
+
+{% if req %}
+<h2>Messaggi</h2>
+{% endif %}
+<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+{% for mail in req.messages.all %}
+<div class="panel panel-default">
+    <div class="panel-heading" role="tab" id="heading{{forloop.counter}}">
+      <h4 class="panel-title">
+        <a data-toggle="collapse" data-parent="#accordion" href="#collapse{{forloop.counter}}" aria-expanded="true" aria-controls="collapse{{forloop.counter}}">
+        <span class="glyphicon glyphicon-envelope" aria-hidden="true"></span>
+        {{mail.date}}
+        </a>
+      </h4>
+    </div>
+    <div id="collapse{{forloop.counter}}" class="panel-collapse collapse {{ forloop.last|yesno:'in,' }}" role="tabpanel" aria-labelledby="heading{{forloop.counter}}">
+      <div class="panel-body">
+          <div class="well">
+              <p>
+                <strong>From: </strong>{{mail.sender}}<br/>
+                <strong>To: </strong>{{mail.to}}
+              </p>
+        {% if mail.imap.mail != mail.sender %}
+            <div class="btn-group">
+              <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                <span class="glyphicon glyphicon-pencil"></span> Rispondi <span class="caret"></span>
+              </button>
+              <ul class="dropdown-menu" role="menu">
+                <li><a href="#"><span class="glyphicon glyphicon-ok"></span> Chiudi richiesta</a></li>
+                <li><a href="#"><span class="glyphicon glyphicon-user"></span> Fornisci nominativi</a></li>
+                  <li role="presentation" class="divider"></li>
+                <li><a href="#"><span class="glyphicon glyphicon-star"></span> Segnala Articolo</a></li>
+                <li><a href="#"><span class="glyphicon glyphicon-music"></span> Segnala Intervista Audio</a></li>
+              </ul>
+            </div>
+        {% endif %}
+          </div>
+        {% if mail.content_type == "text/html" %}
+            {{mail.body|safe}}
+        {% elif mail.content_type == "text/plain" %}
+            <pre>
+{{mail.body|safe}}
+            </pre>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endfor %}
+</div>
 </div>
 </body>
 </html>
