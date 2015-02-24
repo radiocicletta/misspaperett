@@ -1,0 +1,35 @@
+{% load i18n %}
+{% language "it" %}
+<div style="font-size:10pt;line-height:15.3333320617676px;font-family:Arial,sans-serif">
+<p>Salve,</p>
+
+<p>
+{% if action == "names" %}
+    {% if names|length == 1 %}
+    Il nome della persona che usufruirà dell'accredito è
+    {% elif names|length > 1 %}
+    I nomi delle persone che usufruiranno degli accrediti sono
+    {% endif %} <b>
+        {% for name in names %}
+        {{name}}{%if not forloop.last%}, {%endif%}
+        {% endfor %}
+    </b>.
+{% endif %}
+</p>
+
+<p>Grazie per la disponibilità, un caro saluto e buon lavoro.</p>
+
+{{req.requested_by.first_name|capfirst}} {{req.requested_by.last_name|capfirst}}<br>
+{{imap.organization}}.<br>
+{{imap.org_url}}
+<br>
+
+{{msg.date}} &lt;{{msg.sender}}&gt;
+<br>
+&gt;{{quote|safe}}
+
+--
+<br>
+{{imap.signature|safe}}
+</div>
+{% endlanguage %}

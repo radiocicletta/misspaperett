@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+{% load bootstrap3 js %}
+{% jquery_js %}
+
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+{% load i18n %}
+{% load l10n %}
+</head>
+<body>
+<div class="container">
+    <h1>Richieste <a href="view" class="btn btn-primary btn-sm">Crea nuova richiesta</a></h1>
+{% bootstrap_messages %}
+
+{% if pending %}
+<h2>Pendenti</h2>
+<table class="table table-condensed">
+    <thead>
+        <th>Richiesta</th>
+        <th>Richiedente</th>
+        <th>Messaggi</th>
+        <th>Azioni</th>
+    </thead>
+{% for req in pending %}
+    <tr>
+        <td><a href="{{req.url}}">{{req}}</a></td>
+        <td>{{req.requested_by.first_name}} {{req.requested_by.last_name}}</td>
+        <td>{{req.messages.count}}</td>
+        <td>{{req.get_status_display}}</td>
+    </tr>
+{% endfor %}
+</table>
+{% endif %}
+
+{% if complete %}
+<h2>Terminate</h2>
+<table class="table table-condensed">
+    <thead>
+        <th>Richiesta</th>
+        <th>Richiedente</th>
+        <th>Messaggi</th>
+        <th>Azioni</th>
+    </thead>
+{% for req in complete %}
+    <tr>
+        <td><a href="{{req.url}}">{{req}}</a></td>
+        <td>{{req.requested_by.first_name}} {{req.requested_by.last_name}}</td>
+        <td>{{req.messages.count}}</td>
+        <td>{{req.get_status_display}}</td>
+    </tr>
+{% endfor %}
+</table>
+{% endif %}
+   </div> 
+</body>
+</html>

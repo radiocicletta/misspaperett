@@ -10,28 +10,38 @@
 {% bootstrap_javascript %}
 {% load i18n %}
 {% load l10n %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.3.1/css/datepicker3.min.css">
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.3.1/js/bootstrap-datepicker.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.3.1/js/locales/bootstrap-datepicker.it.min.js"></script>
 </head>
 <body>
 
 <div class="container">
     <h1>Richiesta Accredito</h1>
-    <p class="alert" role="alert">
-        {% if req.id %}Richiesta Numero: <a class="text-primary" href="/r/view/{{req.id}}">{{req.id}}</a>{% endif %}
-        Status: <strong class="text-primary">{{req.status}}</strong>
-    </p>
-    <div class="btn-group">
-      <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
-        <span class="glyphicon glyphicon-pencil"></span> Rispondi <span class="caret"></span>
-      </button>
-      <ul class="dropdown-menu" role="menu">
-        <li><a href="#"><span class="glyphicon glyphicon-ok"></span> Chiudi richiesta</a></li>
-        <li><a href="#"><span class="glyphicon glyphicon-user"></span> Fornisci nominativi</a></li>
-      </ul>
+    {% if req.id %}
+    <div class="row">
+    <ul class="nav nav-pills">
+        <li role="presentation"><a href="/r/view/{{req.id}}">Richiesta Numero: <strong>{{req.id}}</strong></a></li>
+        <li role="presentation" class="disabled"><a href="">Stato della richiesta: <strong>{{req.get_status_display}}</strong></a></li>
+        {% if user.is_staff %}
+        <li role="presentation" class="dropdown">
+            <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-expanded="false">
+            Modifica <span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu" role="menu">
+                <li><a href="/r/block/{{req.id}}"><span class="glyphicon glyphicon-remove"></span> Blocca richiesta</a></li>
+                <li><a href="/r/close/{{req.id}}"><span class="glyphicon glyphicon-ok"></span> Chiudi richiesta</a></li>
+            </ul>
+        </li>
+        {% endif %}
+    </ul>
     </div>
+    {% endif %}
     
 {% bootstrap_messages %}
 
 {% block content %}
+    <div class="row">
     <form role="form" action="/r/edit" method="post" class="form-horizontal"> 
         {% csrf_token %}
         <div class="form-group contact">
@@ -59,7 +69,10 @@
         <div class="form-group">
             <label class="control-label col-sm-2" for="">Quando:</label>
             <div class="col-sm-10">
-                <input type="text" class="form-control" placeholder="25 Dicembre 2015" name="when" value="{{ req.when|date:"l j F Y"|default:"" }}" {{ req|yesno:"disabled," }}>
+                <div class="input-group date">
+                    <input type="text" class="form-control" placeholder="25/12/2015" name="when" data-date-format="yyyy-mm-dd" data-provide="datepicker" value="{{ req.when|date:"l j F Y"|default:"" }}" {{ req|yesno:"disabled," }}>
+                    <span class="input-group-addon"><i class="glyphicon glyphicon-th"></i></span>
+                </div>
             </div>
         </div>
         <div class="form-group">
@@ -84,11 +97,11 @@
         </div>
         {% endif %}
     </form>
+    </div>
 {% endblock %}
 
 {% if req %}
 <h2>Messaggi</h2>
-{% endif %}
 <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
 {% for mail in req.messages.all %}
 <div class="panel panel-default">
@@ -113,11 +126,11 @@
                 <span class="glyphicon glyphicon-pencil"></span> Rispondi <span class="caret"></span>
               </button>
               <ul class="dropdown-menu" role="menu">
-                <li><a href="#"><span class="glyphicon glyphicon-ok"></span> Chiudi richiesta</a></li>
-                <li><a href="#"><span class="glyphicon glyphicon-user"></span> Fornisci nominativi</a></li>
+                <li><a href="/r/reply/{{req.id}}?action=thanks"><span class="glyphicon glyphicon-ok"></span> Concludi conversazione</a></li>
+                <li><a href="" data-mailid="{{mail.id}}" data-toggle="modal" data-target="#request-names"><span class="glyphicon glyphicon-user"></span> Fornisci nominativi</a></li>
                   <li role="presentation" class="divider"></li>
-                <li><a href="#"><span class="glyphicon glyphicon-star"></span> Segnala Articolo</a></li>
-                <li><a href="#"><span class="glyphicon glyphicon-music"></span> Segnala Intervista Audio</a></li>
+                <li><a href=""><span class="glyphicon glyphicon-star"></span> Segnala Articolo</a></li>
+                <li><a href=""><span class="glyphicon glyphicon-music"></span> Segnala Intervista Audio</a></li>
               </ul>
             </div>
         {% endif %}
@@ -134,6 +147,84 @@
   </div>
 {% endfor %}
 </div>
+
+<!-- Modals -->
+<div class="modal fade" id="request-names" tabindex="-1" role="dialog" aria-labelledby="request-namesLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Nominativi Accredito</h4>
+      </div>
+    <form role="form" action="/r/reply" method="post" class="form-horizontal"> 
+        {% csrf_token %}
+        <input type="hidden" name="reqid" value="{{req.id}}">
+        <input type="hidden" name="action" value="names">
+        <input class="mailid" type="hidden" name="mailid">
+        <div class="modal-body">
+        {% with ''|center:req.how as range %}
+        {% for c in range %}
+        <div class="form-group">
+            <label class="control-label col-sm-2" for="">Richiedente:</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" placeholder="Speaker" name="requestname" value="{{ req.requested_by.first_name|default:user.first_name }} {{ req.requested_by.last_name|default:user.last_name }}">
+            </div>
+        </div>
+        {% endfor %}
+        {% endwith %}
+      </div>
+      <div class="modal-footer">
+        <button type="reset" class="btn btn-default" data-dismiss="modal">Annulla</button>
+        <button type="submit" class="btn btn-primary">Invia</button>
+      </div>
+    </form>
+    </div>
+  </div>
 </div>
+<div class="modal fade" id="request-link" tabindex="-1" role="dialog" aria-labelledby="request-linkLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Nominativi Accredito</h4>
+      </div>
+    <form role="form" action="/r/reply" method="post" class="form-horizontal"> 
+        {% csrf_token %}
+        <input type="hidden" name="reqid" value="{{req.id}}">
+        <input type="hidden" name="action" value="link">
+        <input class="mailid" type="hidden" name="mailid">
+        <div class="modal-body">
+        <div class="form-group">
+            <label class="control-label col-sm-2" for="">link:</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" placeholder="Speaker" name="link">
+            </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="reset" class="btn btn-default" data-dismiss="modal">Annulla</button>
+        <button type="submit" class="btn btn-primary">Invia</button>
+      </div>
+    </form>
+    </div>
+  </div>
+</div>
+<script type="text/javascript">
+$('#request-names').on('show.bs.modal', function (event) {
+  var button = $(event.relatedTarget) // Button that triggered the modal
+  var recipient = button.data('mailid') // Extract info from data-* attributes
+  var modal = $(this)
+  modal.find('input.mailid').val(recipient)
+})
+$('#request-names').on('show.bs.modal', function (event) {
+  var button = $(event.relatedTarget) // Button that triggered the modal
+  var recipient = button.data('mailid') // Extract info from data-* attributes
+  var modal = $(this)
+  modal.find('input.mailid').val(recipient)
+})
+</script>
+{% endif %}
+</div>
+
 </body>
 </html>

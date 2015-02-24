@@ -1,3 +1,5 @@
+{% load i18n %}
+{% language "it" %}
 <div style="font-size:10pt;line-height:15.3333320617676px;font-family:Arial,sans-serif">
 <p>Salve,</p>
 
@@ -13,10 +15,12 @@ per l'evento <b>{{ req.event }}</b> presso
 
 <p>Un cordiale saluto,</p>
 
-{{imap.organization}}.
+{{req.requested_by.first_name|capfirst}} {{req.requested_by.last_name|capfirst}}<br>
+{{imap.organization}}.<br>
 {{imap.org_url}}
 <br>
 --
 <br>
 {{imap.signature|safe}}
 </div>
+{% endlanguage %}

@@ -8,14 +8,16 @@ from flanker import mime
 
 class Request(models.Model):
 
+    SENT, REPLY, ACCEPTED, USED, CONTENT, CLOSED, BLOCKED = (0, 1, 2, 3, 4, 5, 6)
+
     STATUS = (
-        (0, 'Request Sent'),
-        (1, 'Reply'),
-        (2, 'Accepted'),
-        (3, 'Used'),
-        (4, 'Content Added'),
-        (5, 'Closed'),
-        (6, 'Blocked')
+        (SENT, 'Request Sent'),
+        (REPLY, 'Reply'),
+        (ACCEPTED, 'Accepted'),
+        (USED, 'Used'),
+        (CONTENT, 'Content Added'),
+        (CLOSED, 'Closed'),
+        (BLOCKED, 'Blocked')
     )
 
     LANG = (
@@ -23,7 +25,7 @@ class Request(models.Model):
         ('en', 'English'),
     )
 
-    status = models.CharField(choices=STATUS, max_length=256)
+    status = models.IntegerField(choices=STATUS, default=0)
     language = models.CharField(choices=LANG, max_length=256)
     status_update = models.DateTimeField(auto_now=True)
 
@@ -61,6 +63,10 @@ class Request(models.Model):
             where=self.where,
             when=self.when
         )
+
+    @property
+    def url(self):
+        return "view/" + str(self.id)
 
 
 class SMTP(models.Model):
@@ -155,17 +161,31 @@ class IMAP(models.Model):
             raise Exception()
 
     def _head(self, conn, uid):
-        result, data = conn.uid("fetch", uid, "(RFC822.HEADER)")
-        if result == "OK":
-            message = mime.from_string(data[0][1])
-            return message
-        else:
-            raise Exception()
+        try:
+            result, data = conn.uid("fetch", uid, "(RFC822.HEADER)")
+            if result == "OK":
+                message = mime.from_string(data[0][1])
+                return message
+        except:
+            result, data = conn.uid("fetch", uid, "(BODY.PEEK[])")
+            if result == "OK":
+                message = mime.from_string(data[0][1])
+                return message
 
     def thread_head(self, to, date, subject):
         imap = self._connect()
         imap.select(str(self.sent_folder))
 
+        print(
+            'search',
+            None,
+            '(HEADER Subject "{subject}" '
+            'HEADER To "{to}" '
+            'SENTSINCE {date})'.format(
+                subject=subject,
+                to=to,
+                date=date.strftime("%d-%b-%Y"))
+        )
         result, data = imap.uid(
             'search',
             None,
