@@ -3,6 +3,7 @@
 <div style="font-size:10pt;line-height:15.3333320617676px;font-family:Arial,sans-serif">
 <p>Salve,</p>
 
+{%spaceless%}
 <p>
 {% if action == "names" %}
     {% if names|length == 1 %}
@@ -14,8 +15,22 @@
         {{name}}{%if not forloop.last%}, {%endif%}
         {% endfor %}
     </b>.
+{% elif action == "link" %}
+    Vi invio 
+    {% if podcast %}
+    il link del podcast
+    {% endif %}
+    {% if podcast and article %}
+    e
+    {% endif %}
+    {% if article %}
+    il link dell'articolo
+    {% endif %}
+    riguardante l'evento del {{req.when}}. <br>
+    <a href="{{link}}" target="_blank">{{link}}</a>
 {% endif %}
 </p>
+{%endspaceless%}
 
 <p>Grazie per la disponibilità, un caro saluto e buon lavoro.</p>
 

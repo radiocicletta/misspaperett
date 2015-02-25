@@ -13,7 +13,7 @@
 </head>
 <body>
 <div class="container">
-    <h1>Richieste <a href="view" class="btn btn-primary btn-sm">Crea nuova richiesta</a></h1>
+    <h1>Richieste <a href="new" class="btn btn-primary btn-sm">Crea nuova richiesta</a></h1>
 {% bootstrap_messages %}
 
 {% if pending %}
@@ -23,7 +23,7 @@
         <th>Richiesta</th>
         <th>Richiedente</th>
         <th>Messaggi</th>
-        <th>Azioni</th>
+        <th>Stato</th>
     </thead>
 {% for req in pending %}
     <tr>
@@ -43,7 +43,7 @@
         <th>Richiesta</th>
         <th>Richiedente</th>
         <th>Messaggi</th>
-        <th>Azioni</th>
+        <th>Stato</th>
     </thead>
 {% for req in complete %}
     <tr>

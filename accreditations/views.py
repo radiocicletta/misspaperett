@@ -7,8 +7,10 @@ from django.contrib import messages
 import re
 from .utils import create_message
 from flanker.addresslib import address
+from django.contrib.auth.decorators import login_required
 
 
+@login_required
 def view(request, reqid=None):
     if reqid:
         req = Request.objects.filter(id=reqid).get()
@@ -27,89 +29,118 @@ def view(request, reqid=None):
     )
 
 
+@login_required
 def close(request, reqid=None):
-    req = Request.objects.filter(id=reqid).get()
-    req.status = Request.CLOSED
-    req.save()
+    if request.user.is_staff():
+        req = Request.objects.filter(id=reqid).get()
+        req.status = Request.CLOSED
+        req.save()
+    else:
+        messages.add_message(request, messages.ERROR, "Solo gli addetti possono usare questa azione")
     return view(request, reqid)
 
 
+@login_required
 def block(request, reqid=None):
-    req = Request.objects.filter(id=reqid).get()
-    req.status = Request.BLOCKED
-    req.save()
+    if request.user.is_staff():
+        req = Request.objects.filter(id=reqid).get()
+        req.status = Request.BLOCKED
+        req.save()
+    else:
+        messages.add_message(request, messages.ERROR, "Solo gli addetti possono usare questa azione")
     return view(request, reqid)
 
 
-def reply(request):
+@login_required
+def reply(request, reqid=None):
     if request.method == "POST":
         attribs = request.POST
-        req = Request.objects.filter(id=attribs["reqid"]).get()
-        msg_original = Message.objects.filter(id=attribs["mailid"]).get()
-        names = attribs.getlist("requestname")
+    elif request.method == "GET":
+        attribs = request.GET
 
-        subject = "Re: " + re.sub(
-            "^Re: ",
-            "",
-            re.search(
-                "\nSubject: ([^\r\n]*)[\r\n]",
-                msg_original.headers,
-                re.M
-            ).groups()[0]
+    req = Request.objects.filter(id=reqid or attribs["reqid"]).get()
+    msg_original = Message.objects.filter(id=attribs["mailid"]).get()
+    names = attribs.getlist("requestname", [])
+    link = "link" in attribs and attribs["link"] or None
+    podcast = attribs.get("contenttype", None) == "podcast"
+    article = attribs.get("contenttype", None) == "article"
+
+    subject = "Re: " + re.sub(
+        "^Re: ",
+        "",
+        re.search(
+            "\nSubject: ([^\r\n]*)[\r\n]",
+            msg_original.headers,
+            re.M
+        ).groups()[0]
+    )
+    imap = msg_original.imap
+    now = datetime.now()
+    quote = re.sub(
+        "\n",
+        "<br>\n&gt;",
+        re.sub("<\/{0,1}[^>]+>", "", msg_original.body)
+    )
+    html_body = render_to_string(
+        "reply_it.html",
+        {
+            "req": req,
+            "imap": imap,
+            "msg": msg_original,
+            "quote": quote,
+            "names": names,
+            "podcast": podcast,
+            "article": article,
+            "link": link,
+            "action": attribs["action"]
+        })
+    smtp = imap.smtp
+    sender = [
+        a.address for a in
+        address.parse_list(
+            msg_original.sender
         )
-        imap = msg_original.imap
-        now = datetime.now()
-        quote = re.sub(
-            "\n",
-            "<br>\n&gt;",
-            re.sub("<\/{0,1}[^>]+>", "", msg_original.body)
-        )
-        html_body = render_to_string(
-            "reply_it.html",
-            {
-                "req": req,
-                "imap": imap,
-                "msg": msg_original,
-                "quote": quote,
-                "names": names,
-                "action": attribs["action"]
-            })
-        smtp = imap.smtp
-        sender = [
-            a.address for a in
-            address.parse_list(
-                msg_original.sender
-            )
-        ]
-        smtp.send(
-            re.sub("<\/{0,1}[^>]+>", "", html_body),
-            imap.mail,
-            sender,
-            html_body,
-            subject
-        )
-        msg = imap.thread_head(
-            sender[0],
-            now,
-            subject
-        )
+    ]
+    smtp.send(
+        re.sub("<\/{0,1}[^>]+>", "", html_body),
+        imap.mail,
+        sender,
+        html_body,
+        subject,
+        {
+            "In-Reply-To": msg_original.message_id,
+            "References": msg_original.message_id
+        }
+    )
+    msg = imap.thread_head(
+        sender[0],
+        now,
+        subject
+    )
 
-        message = create_message(msg)
+    message = create_message(msg)
 
-        message.sender = imap.mail
-        message.to = msg_original.sender
+    message.sender = imap.mail
+    message.to = msg_original.sender
 
-        message.imap = imap
-        message.smtp = smtp
+    message.imap = imap
+    message.smtp = smtp
 
-        message.references = message
+    message.references = message
 
-        message.request = req
-        message.save()
+    message.request = req
+    message.save()
 
+    if attribs["action"] == "names":
         req.status = Request.ACCEPTED
+    elif attribs["action"] == "link":
+        req.status = Request.USED
+    elif attribs["action"] == "thanks":
+        req.status = Request.CLOSED
 
-        return view(request, attribs["reqid"])
+    req.save()
+
+    return view(request, reqid or attribs["reqid"])
 
 
 def index(request):
@@ -117,12 +148,13 @@ def index(request):
         request,
         "accreditations/index.html",
         {
-            "pending": Request.objects.filter(status__lte=3),
-            "complete": Request.objects.filter(status__gt=3)
+            "pending": Request.objects.filter(status__lte=Request.ACCEPTED),
+            "complete": Request.objects.filter(status__gt=Request.ACCEPTED)
         }
     )
 
 
+@login_required
 def edit(request):
     if request.method == "POST":
         attribs = request.POST
@@ -150,7 +182,8 @@ def edit(request):
 
         accr_request.event = attribs['event']
         accr_request.where = attribs['where']
-        accr_request.when = attribs['when']
+        accr_request.when = datetime.strptime(attribs['when'], '%Y-%m-%d').date()
+        #accr_request.when = attribs['when']
 
         accr_request.how = attribs['how']
 

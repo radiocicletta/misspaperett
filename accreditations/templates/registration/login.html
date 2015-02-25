@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+{% load bootstrap3 js %}
+{% jquery_js %}
+
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+{% load i18n %}
+{% load l10n %}
+<style>
+
+body {
+  padding-top: 40px;
+  padding-bottom: 40px;
+  background-color: #eee;
+}
+
+.form-signin {
+  max-width: 330px;
+  padding: 15px;
+  margin: 0 auto;
+}
+.form-signin .form-signin-heading,
+.form-signin .checkbox {
+  margin-bottom: 10px;
+}
+.form-signin .checkbox {
+  font-weight: normal;
+}
+.form-signin .form-control {
+  position: relative;
+  height: auto;
+  -webkit-box-sizing: border-box;
+     -moz-box-sizing: border-box;
+          box-sizing: border-box;
+  padding: 10px;
+  font-size: 16px;
+}
+.form-signin .form-control:focus {
+  z-index: 2;
+}
+.form-signin input[type="email"] {
+  margin-bottom: -1px;
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+}
+.form-signin input[type="password"] {
+  margin-bottom: 10px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+</style>
+</head>
+<body>
+    <div class="container">
+    <div class="row">
+    {% bootstrap_messages %}
+    <form method="post" class="form-signin" action="{% url 'django.contrib.auth.views.login' %}">
+        <h2 class="form-signin-heading">Please sign in</h2>
+        {% csrf_token %}
+        <div class="form-group">
+            <label class="sr-only" for="">Username:</label>
+            <input class="form-control" type="text" name="username" placeholder="username">
+        </div>
+        <div class="form-group">
+            <label class="sr-only" for="">Password</label>
+            <input class="form-control" type="password" name="password" placeholder="••••••••">
+        </div>
+        <button class="btn btn-lg btn-primary btn-block" type="submit" >Login</button>
+        <input type="hidden" name="next" value="{{ next }}" />
+    </form>
+    </div>
+    </div>
+</body>
+</html>

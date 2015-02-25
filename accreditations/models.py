@@ -39,7 +39,7 @@ class Request(models.Model):
         blank=False,
         null=False,
         default="Place")
-    when = models.DateTimeField(auto_now=True)
+    when = models.DateField()
 
     mail_1 = models.EmailField(blank=False, null=False, max_length=256)
     mail_2 = models.EmailField(max_length=256)
@@ -85,7 +85,7 @@ class SMTP(models.Model):
             host=self.host
         )
 
-    def send(self, message, from_email, recipient_list, html_message, subject='Richiesta Accredito Stampa'):
+    def send(self, message, from_email, recipient_list, html_message, subject='Richiesta Accredito Stampa', headers={}):
 
         backend = EmailBackend(
             self.host,
@@ -107,7 +107,7 @@ class SMTP(models.Model):
             [],  # [from_email],  # bcc
             backend,
             [],  # attachments
-            {},  # headers
+            headers,
             []  # cc
         )
         msg.attach_alternative(html_content, "text/html")
@@ -176,16 +176,6 @@ class IMAP(models.Model):
         imap = self._connect()
         imap.select(str(self.sent_folder))
 
-        print(
-            'search',
-            None,
-            '(HEADER Subject "{subject}" '
-            'HEADER To "{to}" '
-            'SENTSINCE {date})'.format(
-                subject=subject,
-                to=to,
-                date=date.strftime("%d-%b-%Y"))
-        )
         result, data = imap.uid(
             'search',
             None,

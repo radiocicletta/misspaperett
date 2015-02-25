@@ -17,24 +17,26 @@
 <body>
 
 <div class="container">
-    <h1>Richiesta Accredito</h1>
+    <h1>Richiesta Accredito <a href="/" class="btn btn-primary btn-sm">Torna all'indice</a></h1>
     {% if req.id %}
     <div class="row">
+        <div class="well">
     <ul class="nav nav-pills">
-        <li role="presentation"><a href="/r/view/{{req.id}}">Richiesta Numero: <strong>{{req.id}}</strong></a></li>
-        <li role="presentation" class="disabled"><a href="">Stato della richiesta: <strong>{{req.get_status_display}}</strong></a></li>
+        <li role="presentation"><a class="btn btn-primary" href="/view/{{req.id}}">Richiesta Numero: <strong>{{req.id}}</strong></a></li>
+        <li role="presentation" class="disabled"><a class="btn btn-default" href="">Stato della richiesta: <strong>{{req.get_status_display}}</strong></a></li>
         {% if user.is_staff %}
         <li role="presentation" class="dropdown">
-            <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-expanded="false">
+            <a class="btn btn-default dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-expanded="false">
             Modifica <span class="caret"></span>
             </a>
             <ul class="dropdown-menu" role="menu">
-                <li><a href="/r/block/{{req.id}}"><span class="glyphicon glyphicon-remove"></span> Blocca richiesta</a></li>
-                <li><a href="/r/close/{{req.id}}"><span class="glyphicon glyphicon-ok"></span> Chiudi richiesta</a></li>
+                <li><a href="/block/{{req.id}}"><span class="glyphicon glyphicon-remove"></span> Blocca richiesta</a></li>
+                <li><a href="/close/{{req.id}}"><span class="glyphicon glyphicon-ok"></span> Chiudi richiesta</a></li>
             </ul>
         </li>
         {% endif %}
     </ul>
+</div>
     </div>
     {% endif %}
     
@@ -42,7 +44,7 @@
 
 {% block content %}
     <div class="row">
-    <form role="form" action="/r/edit" method="post" class="form-horizontal"> 
+    <form role="form" action="/edit" method="post" class="form-horizontal"> 
         {% csrf_token %}
         <div class="form-group contact">
             <div class="form-inline">
@@ -126,11 +128,11 @@
                 <span class="glyphicon glyphicon-pencil"></span> Rispondi <span class="caret"></span>
               </button>
               <ul class="dropdown-menu" role="menu">
-                <li><a href="/r/reply/{{req.id}}?action=thanks"><span class="glyphicon glyphicon-ok"></span> Concludi conversazione</a></li>
+                <li><a href="/reply/{{req.id}}?action=thanks&mailid={{mail.id}}"><span class="glyphicon glyphicon-ok"></span> Concludi conversazione</a></li>
                 <li><a href="" data-mailid="{{mail.id}}" data-toggle="modal" data-target="#request-names"><span class="glyphicon glyphicon-user"></span> Fornisci nominativi</a></li>
                   <li role="presentation" class="divider"></li>
-                <li><a href=""><span class="glyphicon glyphicon-star"></span> Segnala Articolo</a></li>
-                <li><a href=""><span class="glyphicon glyphicon-music"></span> Segnala Intervista Audio</a></li>
+                <li><a href="" data-contenttype="article" data-mailid="{{mail.id}}" data-toggle="modal" data-target="#request-link"><span class="glyphicon glyphicon-star"></span> Segnala Articolo</a></li>
+                <li><a href="" data-contenttype="podcast" data-mailid="{{mail.id}}" data-toggle="modal" data-target="#request-link"><span class="glyphicon glyphicon-music"></span> Segnala Intervista Audio</a></li>
               </ul>
             </div>
         {% endif %}
@@ -156,7 +158,7 @@
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
         <h4 class="modal-title">Nominativi Accredito</h4>
       </div>
-    <form role="form" action="/r/reply" method="post" class="form-horizontal"> 
+    <form role="form" action="/reply" method="post" class="form-horizontal"> 
         {% csrf_token %}
         <input type="hidden" name="reqid" value="{{req.id}}">
         <input type="hidden" name="action" value="names">
@@ -186,18 +188,19 @@
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title">Nominativi Accredito</h4>
+        <h4 class="modal-title">Segnala link</h4>
       </div>
-    <form role="form" action="/r/reply" method="post" class="form-horizontal"> 
+    <form role="form" action="/reply" method="post" class="form-horizontal"> 
         {% csrf_token %}
         <input type="hidden" name="reqid" value="{{req.id}}">
         <input type="hidden" name="action" value="link">
         <input class="mailid" type="hidden" name="mailid">
+        <input class="contenttype" type="hidden" name="contenttype">
         <div class="modal-body">
         <div class="form-group">
-            <label class="control-label col-sm-2" for="">link:</label>
+            <label class="control-label col-sm-2" for="">Link:</label>
             <div class="col-sm-10">
-                <input type="text" class="form-control" placeholder="Speaker" name="link">
+                <input type="text" class="form-control" placeholder="http://some.url.com/..." name="link">
             </div>
         </div>
       </div>
@@ -211,16 +214,18 @@
 </div>
 <script type="text/javascript">
 $('#request-names').on('show.bs.modal', function (event) {
-  var button = $(event.relatedTarget) // Button that triggered the modal
-  var recipient = button.data('mailid') // Extract info from data-* attributes
-  var modal = $(this)
-  modal.find('input.mailid').val(recipient)
+  var button = $(event.relatedTarget);
+  var recipient = button.data('mailid');
+  var modal = $(this);
+  modal.find('input.mailid').val(recipient);
 })
-$('#request-names').on('show.bs.modal', function (event) {
-  var button = $(event.relatedTarget) // Button that triggered the modal
-  var recipient = button.data('mailid') // Extract info from data-* attributes
-  var modal = $(this)
-  modal.find('input.mailid').val(recipient)
+$('#request-link').on('show.bs.modal', function (event) {
+  var button = $(event.relatedTarget);
+  var recipient = button.data('mailid');
+  var content = button.data('contenttype');
+  var modal = $(this);
+  modal.find('input.mailid').val(recipient);
+  modal.find('input.contenttype').val(content);
 })
 </script>
 {% endif %}
