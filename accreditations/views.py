@@ -31,7 +31,7 @@ def view(request, reqid=None):
 
 @login_required
 def close(request, reqid=None):
-    if request.user.is_staff():
+    if request.user.is_staff:
         req = Request.objects.filter(id=reqid).get()
         req.status = Request.CLOSED
         req.save()
@@ -42,7 +42,7 @@ def close(request, reqid=None):
 
 @login_required
 def block(request, reqid=None):
-    if request.user.is_staff():
+    if request.user.is_staff:
         req = Request.objects.filter(id=reqid).get()
         req.status = Request.BLOCKED
         req.save()
