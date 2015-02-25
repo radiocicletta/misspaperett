@@ -13,6 +13,7 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 LOGIN_URL = "/login/"
+LOGIN_REDIRECT_URL = "/"
 
 
 # Quick-start development settings - unsuitable for production
